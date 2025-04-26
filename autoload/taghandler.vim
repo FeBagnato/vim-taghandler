@@ -1,5 +1,5 @@
 " Callback function used by ListFunctions
-function! taghandler#ListFunctionsCallback(id, result)
+function! s:ListFunctionsCallback(id, result)
 	let function_def_str =  getbufline(winbufnr(a:id), a:result)[0]
 	let function_line = split(function_def_str, ':')[0]
 	call cursor(function_line, 1)
@@ -13,6 +13,6 @@ function! taghandler#ListFunctions(...)
 
 	let function_list = split(function_list_str, '\n')
 	if !empty(function_list)
-		call popup_menu(function_list, #{callback: 'taghandler#ListFunctionsCallback', highlight: '', border: [], padding: [0,0,0,0]})
+		call popup_menu(function_list, #{callback: 's:ListFunctionsCallback', highlight: '', border: [], padding: [0,0,0,0]})
 	endif
 endfunction
