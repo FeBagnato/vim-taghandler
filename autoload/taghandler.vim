@@ -1,8 +1,13 @@
 " Callback function used by ListFunctions
 function! s:ListFunctionsCallback(id, result)
+	if a:result < 0
+		return 1
+	endif
+
 	let function_def_str =  getbufline(winbufnr(a:id), a:result)[0]
 	let function_line = split(function_def_str, ':')[0]
 	call cursor(function_line, 1)
+	return 0
 endfunction
 
 " Function to retrive all functions defined in the current file.
