@@ -13,7 +13,7 @@ endfunction
 " Function to retrive all functions defined in the current file.
 " It will show a list with the result.
 function! taghandler#ListFunctions(...)
-	let function_regex = '''^[a-zA-Z][a-zA-Z0-9]*[ 	]\+[a-zA-Z][a-zA-Z0-9_]*[	 ]*([[:print:]]*)'''
+	let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*[* 	]\+[a-zA-Z_][a-zA-Z0-9_]*[	 ]*([[:print:]]*)'''
 	let function_list_str = system('grep -n -G '. function_regex . ' ' . expand('%'))
 
 	let function_list = split(function_list_str, '\n')
