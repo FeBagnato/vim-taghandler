@@ -7,5 +7,5 @@ if exists("g:loaded_taghandler")
 endif
 let g:loaded_taghandler = 1
 
-command! -nargs=0 DisplayTime call taghandler#DisplayTime()
+command! -nargs=0 Find call taghandler#Find()
 command! -nargs=0 ListFunctions call taghandler#ListFunctions()

@@ -13,7 +13,7 @@ endfunction
 " Function to retrive all functions defined in the current file.
 " It will show a list with the result.
 function! taghandler#ListFunctions(...)
-	if v:version <= 900
+	if v:version < 900
 		echo "You need to use vim 9.0 or newer"
 		return
 	endif
@@ -26,3 +26,41 @@ function! taghandler#ListFunctions(...)
 		call popup_menu(function_list, #{callback: 's:ListFunctionsCallback', highlight: '', border: [], padding: [0,0,0,0]})
 	endif
 endfunction
+
+
+" Callback function used by Find
+function! s:FindCallback(id, result)
+	if a:result < 0
+		return 1
+	endif
+
+	let function_location = split(getbufline(winbufnr(a:id), a:result)[0], ':')
+	if function_location[0] == expand('%')
+		call cursor(function_location[1], 1)
+	else
+		execute 'tabe ' . function_location[0]
+		call cursor(function_location[1], 1)
+	endif
+
+	return 0
+endfunction
+
+" Function to find all symbol references inside a project.
+" It will show a list with the location of the symbols on which the cursor
+" is under.
+function! taghandler#Find()
+	if v:version <	900
+		echo "You need to use vim 9.0 or newer"
+		return
+	endif
+
+	let cursorSymbol = expand('<cword>')
+	if empty(cursorSymbol)
+		return
+	endif
+
+	let function_list_str = system('grep -n -r '. cursorSymbol . ' ' . '*')
+	let function_list = split(function_list_str, '\n')
+	call popup_menu(function_list, #{callback: 's:FindCallback', highlight: '', border: [], padding: [0,0,0,0]})
+endfunction
+
