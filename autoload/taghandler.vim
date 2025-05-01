@@ -13,6 +13,11 @@ endfunction
 " Function to retrive all functions defined in the current file.
 " It will show a list with the result.
 function! taghandler#ListFunctions(...)
+	if v:version <= 900
+		echo "You need to use vim 9.0 or newer"
+		return
+	endif
+
 	let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*[* 	]\+[a-zA-Z_][a-zA-Z0-9_]*[	 ]*([[:print:]]*)'''
 	let function_list_str = system('grep -n -G '. function_regex . ' ' . expand('%'))
 
