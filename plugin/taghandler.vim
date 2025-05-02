@@ -1,4 +1,4 @@
-" Last Change: 2025 Apr 12
+" Last Change: 2025 Mai 1
 " Mantainer: Felipe Bagnato
 " License: GPL
 
@@ -7,5 +7,8 @@ if exists("g:loaded_taghandler")
 endif
 let g:loaded_taghandler = 1
 
-command! -nargs=0 Find call taghandler#Find()
+" Commands
 command! -nargs=0 ListFunctions call taghandler#ListFunctions()
+
+" Mappings
+nnoremap <silent> tf :call taghandler#Find()<CR>
