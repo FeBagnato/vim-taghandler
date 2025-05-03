@@ -64,3 +64,22 @@ function! taghandler#Find()
 	call popup_menu(function_list, #{callback: 's:FindCallback', highlight: '', border: [], padding: [0,0,0,0]})
 endfunction
 
+
+" This function will show the current function name.
+" It can be called in .vimrc to always show this information in statusline.
+function! taghandler#GetCurrentFunction()
+	let function_regex = "^[a-zA-Z_][a-zA-Z0-9_]*[* \t]\\+[a-zA-Z_][a-zA-Z0-9_]*[ \t]*(.*)"
+	let last_function_definition =  search(function_regex, 'bWnc')
+	let last_end_of_function = search("^}", 'bWn')
+
+	if last_function_definition > last_end_of_function
+		let function_definition_line = getline(last_function_definition)
+		let function_definition_splited = split(function_definition_line, '(')[0]
+
+		if function_definition_splited =~ '\s'
+			return split(function_definition_splited)[1]
+		endif
+	endif
+
+	return ""
+endfunction
