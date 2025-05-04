@@ -77,7 +77,8 @@ function! taghandler#GetCurrentFunction()
 		let function_definition_splited = split(function_definition_line, '(')[0]
 
 		if function_definition_splited =~ '\s'
-			return split(function_definition_splited)[1]
+			let function_definition_no_spaces = split(function_definition_splited)
+			return function_definition_no_spaces[len(function_definition_no_spaces) - 1]
 		else
 			" In case the function name is something like "void**function()" which is valid in C"
 			let function_name_start_position = stridx(function_definition_splited, '*')
