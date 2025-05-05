@@ -67,7 +67,8 @@ endfunction
 
 " This function will show the current function name.
 " It can be called in .vimrc to always show this information in statusline.
-function! taghandler#GetCurrentFunction()
+let s:current_function_value = ""
+function! s:GetCurrentFunction(...)
 	let function_regex = "^[a-zA-Z_][a-zA-Z0-9_]*[* \t]\\+[a-zA-Z_][a-zA-Z0-9_]*[ \t]*(.*)"
 	let last_function_definition =  search(function_regex, 'bWnc')
 	let last_end_of_function = search("^}", 'bWn')
@@ -78,13 +79,24 @@ function! taghandler#GetCurrentFunction()
 
 		if function_definition_splited =~ '\s'
 			let function_definition_no_spaces = split(function_definition_splited)
-			return function_definition_no_spaces[len(function_definition_no_spaces) - 1]
+			let s:current_function_value = function_definition_no_spaces[len(function_definition_no_spaces) - 1]
 		else
 			" In case the function name is something like "void**function()" which is valid in C"
 			let function_name_start_position = stridx(function_definition_splited, '*')
-			return function_definition_splited[function_name_start_position:]
+			let s:current_function_value = function_definition_splited[function_name_start_position:]
 		endif
+	else
+		let s:current_function_value = ""
 	endif
+endfunction
 
-	return ""
+" GetCurrentFunction entry point
+let s:first_run = 1
+function! taghandler#ReturnCurrentFunction()
+		if s:first_run
+			call timer_start(0, 's:GetCurrentFunction', {'repeat': -1})
+			let s:first_run = 0
+		endif
+
+		return s:current_function_value
 endfunction
