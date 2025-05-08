@@ -18,7 +18,7 @@ function! taghandler#ListFunctions(...)
 		return
 	endif
 
-	let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*\([	 ]\+[a-zA-Z_][a-zA-Z0-9_]*\)*[* 	]\+[a-zA-Z_][a-zA-Z0-9_]*[	 ]*([[:print:]]*)'''
+	let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*\([[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*\)*[*[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*([[:print:]]*)'''
 	let function_list_str = system('grep -n -G '. function_regex . ' ' . expand('%'))
 
 	let function_list = split(function_list_str, '\n')
