@@ -59,7 +59,7 @@ function! taghandler#Find()
 		return
 	endif
 
-	let function_list_str = system('grep -n -r '. cursorSymbol . ' ' . '*')
+	let function_list_str = system('grep -n -r '. cursorSymbol . ' ' . '* 2>/dev/null')
 	let function_list = split(function_list_str, '\n')
 	call popup_menu(function_list, #{callback: 's:FindCallback', highlight: '', border: [], padding: [0,0,0,0]})
 endfunction
