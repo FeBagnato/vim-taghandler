@@ -20,7 +20,10 @@ function! taghandler#ListFunctions(...)
 		return
 	endif
 
-	let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*\([[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*\)*[*[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*([[:print:]]*)'''
+	let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*' .
+		\ '\([[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*\)*' .
+		\ '[*[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*' .
+		\ '[[:space:]]*([[:print:]]*)'''
 	let function_list_str = system('grep -n -G '. function_regex . ' ' . expand('%'))
 	let function_list_str = substitute(function_list_str, '\s\+', ' ', 'g')
 
@@ -77,7 +80,10 @@ endfunction
 " Return: None
 let s:current_function_value = ""
 function! s:GetCurrentFunction(...)
-	let function_regex = "^[a-zA-Z_][a-zA-Z0-9_]*\\([ \t]\\+[a-zA-Z_][a-zA-Z0-9_]*\\)*[* \t]\\+[a-zA-Z_][a-zA-Z0-9_]*[ \t]*(.*)"
+	let function_regex = "^[a-zA-Z_][a-zA-Z0-9_]*" .
+		\ "\\([ \t]\\+[a-zA-Z_][a-zA-Z0-9_]*\\)*" .
+		\ "[* \t]\\+[a-zA-Z_][a-zA-Z0-9_]*" .
+		\ "[ \t]*(.*)"
 	let last_function_definition =  search(function_regex, 'bWnc')
 	let last_end_of_function = search("^}", 'bWn')
 
