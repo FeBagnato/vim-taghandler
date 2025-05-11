@@ -22,6 +22,7 @@ function! taghandler#ListFunctions(...)
 
 	let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*\([[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*\)*[*[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*[[:space:]]*([[:print:]]*)'''
 	let function_list_str = system('grep -n -G '. function_regex . ' ' . expand('%'))
+	let function_list_str = substitute(function_list_str, '\s\+', ' ', 'g')
 
 	let function_list = split(function_list_str, '\n')
 	if !empty(function_list)
@@ -64,6 +65,7 @@ function! taghandler#Find()
 	endif
 
 	let function_list_str = system('grep -n -r '. cursorSymbol . ' ' . '* 2>/dev/null')
+	let function_list_str = substitute(function_list_str, '\s\+', ' ', 'g')
 	let function_list = split(function_list_str, '\n')
 	call popup_menu(function_list, #{callback: 's:FindCallback', highlight: '', border: [], padding: [0,0,0,0]})
 endfunction
