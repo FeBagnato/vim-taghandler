@@ -29,7 +29,36 @@ function! taghandler#ListFunctions(...)
 
 	let function_list = split(function_list_str, '\n')
 	if !empty(function_list)
-		call popup_menu(function_list, #{callback: 's:ListFunctionsCallback', highlight: '', border: [], padding: [0,0,0,0]})
+		" Setting Menu highlight
+		let function_highlighted_list = []
+
+		if !hlexists('FunctionListNumber')
+			execute 'highlight link FunctionListNumber LineNr'
+		endif
+		if !hlexists('FunctionListText')
+			execute 'highlight link FunctionListText Pmenu'
+		endif
+
+		if empty(prop_type_get('NumberProp'))
+			call prop_type_add('NumberProp', {'highlight': 'FunctionListNumber'})
+		endif
+
+		for func in function_list
+			let lineNr_length = len(split(func, ':')[0]) + 1
+
+			let menu_object = {
+				\ 'text': func,
+				\ 'props': [{
+					\ 'col': 1,
+					\ 'length': lineNr_length,
+					\ 'type': 'NumberProp'}
+			\ ]}
+
+			call add(function_highlighted_list, menu_object)
+		endfor
+
+		call popup_menu(function_highlighted_list, #{callback: 's:ListFunctionsCallback',
+			\ highlight: 'FunctionListText', border: [], padding: [0,0,0,0]})
 	endif
 endfunction
 
