@@ -10,10 +10,12 @@ function! s:ListFunctionsCallback(id, result)
 	return 0
 endfunction
 
+" ===========================================================================
 " Name: ListFunctions
 " Description: Function to retrive all functions defined in the current file.
 "              It will show a list with the result.
 " Return: None
+" ===========================================================================
 function! taghandler#ListFunctions(...)
 	if v:version < 900
 		echo "You need to use vim 9.0 or newer"
@@ -80,11 +82,13 @@ function! s:FindCallback(id, result)
 	return 0
 endfunction
 
+" =====================================================================================
 " Name: Find
 " Description: Function to find all symbol references inside a project.
 "              It will show a list with the location of the symbols on which the cursor
 "              is under.
 " Return: None
+" =====================================================================================
 function! taghandler#Find()
 	if v:version <	900
 		echo "You need to use vim 9.0 or newer"
@@ -103,10 +107,12 @@ function! taghandler#Find()
 endfunction
 
 
+" ======================================================================================
 " Name: GetCurrentFunction
 " Description: This function will show the current function name.
 "              It can be called in .vimrc to always show this information in statusline.
 " Return: None
+" ======================================================================================
 let s:current_function_value = ""
 function! s:GetCurrentFunction(...)
 	let function_regex = "^[a-zA-Z_][a-zA-Z0-9_]*" .
