@@ -118,16 +118,9 @@ function! s:GetCurrentFunction(...)
 
 	if last_function_definition > last_end_of_function
 		let function_definition_line = getline(last_function_definition)
-		let function_definition_splited = split(function_definition_line, '(')[0]
+		let function_definition_splited = split(function_definition_line, ')')[0] . ")"
 
-		if function_definition_splited =~ '\s'
-			let function_definition_no_spaces = split(function_definition_splited)
-			let s:current_function_value = function_definition_no_spaces[len(function_definition_no_spaces) - 1]
-		else
-			" In case the function name is something like "void**function()" which is valid in C"
-			let function_name_start_position = stridx(function_definition_splited, '*')
-			let s:current_function_value = function_definition_splited[function_name_start_position:]
-		endif
+		let s:current_function_value = substitute(function_definition_splited, '\s\+', ' ', 'g')
 	else
 		let s:current_function_value = ""
 	endif
