@@ -89,6 +89,8 @@ endfunction
 "              is under.
 " Return: None
 " =====================================================================================
+let g:ExclusionList = []
+let g:InclusionList = []
 function! taghandler#Find()
 	if v:version <	900
 		echo "You need to use vim 9.0 or newer"
@@ -100,7 +102,15 @@ function! taghandler#Find()
 		return
 	endif
 
-	let function_list_str = system('grep -n -r '. cursorSymbol . ' ' . '* 2>/dev/null')
+	let grep_command = "grep -n -r " . cursorSymbol . ' * 2>/dev/null '
+	if !empty(g:InclusionList)
+		let grep_command = grep_command . ' | grep '
+		for inc_item in g:InclusionList
+			let grep_command = grep_command . '-e ' . inc_item . ' '
+		endfor
+	endif
+
+	let function_list_str = system(grep_command)
 	let function_list_str = substitute(function_list_str, '\s\+', ' ', 'g')
 	let function_list = split(function_list_str, '\n')
 	call popup_menu(function_list, #{callback: 's:FindCallback', highlight: '', border: [], padding: [0,0,0,0]})
