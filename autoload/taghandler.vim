@@ -110,6 +110,16 @@ function! taghandler#Find()
 		endfor
 	endif
 
+	if !empty(g:ExclusionList)
+		let grep_command = grep_command . ' | grep -v '
+		for excl_item in g:ExclusionList
+			" Cases where item is a extension (like ".c", ".cpp", ".h" etc)
+			let excl_item = substitute(excl_item, '\.', '\\.', '')
+
+			let grep_command = grep_command . '-e "' . excl_item . '" '
+		endfor
+	endif
+
 	let function_list_str = system(grep_command)
 	let function_list_str = substitute(function_list_str, '\s\+', ' ', 'g')
 	let function_list = split(function_list_str, '\n')
