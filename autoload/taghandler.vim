@@ -120,9 +120,14 @@ function! taghandler#Find()
 		endfor
 	endif
 
+	let search_popup_id =  popup_notification("Searching...", {'pos': 'center', 'highlight': ''})
+	redraw
+
 	let function_list_str = system(grep_command)
 	let function_list_str = substitute(function_list_str, '\s\+', ' ', 'g')
 	let function_list = split(function_list_str, '\n')
+
+	call popup_close(search_popup_id)
 	call popup_menu(function_list, #{callback: 's:FindCallback', highlight: '', border: [], padding: [0,0,0,0]})
 endfunction
 
