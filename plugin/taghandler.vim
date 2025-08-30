@@ -11,4 +11,5 @@ let g:loaded_taghandler = 1
 command! -nargs=0 ListFunctions call taghandler#ListFunctions()
 
 " Mappings
-nnoremap <silent> tf :call taghandler#Find()<CR>
+nnoremap <silent> tf  :call taghandler#Find()<CR>
+nnoremap <silent> tjb :call taghandler#FindJumpBackwards()<CR>

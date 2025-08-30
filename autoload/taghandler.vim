@@ -71,6 +71,17 @@ function! s:FindCallback(id, result)
 		return 1
 	endif
 
+	" Get current cursor position and add it to the stack
+	let current_location = [tabpagenr(), getpos('.')[1]]
+	if len(s:stack_find_backwards)
+		if current_location != s:stack_find_backwards[len(s:stack_find_backwards) - 1]
+			call add(s:stack_find_backwards, current_location)
+		endif
+	else
+		call add(s:stack_find_backwards, current_location)
+	endif
+
+	" Jump to selected function location
 	let function_location = split(getbufline(winbufnr(a:id), a:result)[0], ':')
 	if function_location[0] == expand('%')
 		call cursor(function_location[1], 1)
@@ -132,6 +143,30 @@ function! taghandler#Find()
 endfunction
 
 
+" =====================================================================================
+" Name: FindJumpBackwards
+" Description: Function to jump backwards after use the Find function.
+" Return: None
+" ======================================================================================
+let s:stack_find_backwards = []
+function! taghandler#FindJumpBackwards()
+	if v:version < 900
+		echo "You need to use vim 9.0 or newer"
+		return
+	endif
+
+	let last_item_idx = len(s:stack_find_backwards) - 1
+	if last_item_idx < 0
+		return
+	endif
+
+	" Jump to the last location saved in stack
+	execute 'tabn ' . s:stack_find_backwards[last_item_idx][0]
+	call cursor(s:stack_find_backwards[last_item_idx][1], 1)
+
+	" Pop item from stack
+	call remove(s:stack_find_backwards, last_item_idx)
+endfunction
 " ======================================================================================
 " Name: GetCurrentFunction
 " Description: This function will show the current function name.
