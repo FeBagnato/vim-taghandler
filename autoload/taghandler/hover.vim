@@ -45,9 +45,23 @@ function! taghandler#hover#FunctionHover(...)
             let func_split_def_header = split(func_def, ':')
             let func_header_file = func_split_def_header[0]
             let func_def = func_split_def_header[1]
-            echo "[debug] Linux def: " . func_def
-            echo "[debug] Linux header: " . func_header_file
         endif
     endif
+    echo "[debug] Linux def: " . func_def
+    echo "[debug] Linux header: " . func_header_file
+
+    " Save the function name
+    let func_name = system('echo -n \"' . shellescape(func_def) . '\" | grep -o -G [a-zA-Z0-9_]*[[:space:]]*\(')
+    let func_name = split(func_name, '(')[0]
+
+    echo "[debug] Function name: " . func_name
+
+    " Showing popup
+    let hover_info = []
+
+    call add(hover_info, "# Function " . func_name)
+    call add(hover_info, "provided by <" . func_header_file . ">")
+
+    let func_popup_id = popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1]})
 
 endfunction
