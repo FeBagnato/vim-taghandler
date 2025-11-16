@@ -134,6 +134,6 @@ function! taghandler#hover#FunctionHover(...)
     let hover_info = hover_info + func_doc
     call add(hover_info, "---")
 
-    let func_popup_id = popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1]})
+    let func_popup_id = popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1], moved: 'any'})
 
 endfunction
