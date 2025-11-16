@@ -37,17 +37,20 @@ function! taghandler#hover#FunctionHover(...)
 
     " Linux functions
     let func_header_file = ""
+    let func_file_line = 0
     if empty(func_def)
-        let func_def = system('grep -G -r ' . func_def_regex . ' ' . s:linux_include_path . ' --include=*.h ' . ' 2>/dev/null')
+        let func_def = system('grep -n -G -r ' . func_def_regex . ' ' . s:linux_include_path . ' --include=*.h ' . ' 2>/dev/null')
         if !empty(func_def)
             let func_def = substitute(func_def, ';', '', '')
 
             let func_split_def_header = split(func_def, ':')
+            let func_file_line = func_split_def_header[1]
             let func_header_file = func_split_def_header[0]
-            let func_def = func_split_def_header[1]
+            let func_def = func_split_def_header[2]
         endif
     endif
     echo "[debug] Linux def: " . func_def
+    echo "[debug] Linux def num: " . func_file_line
     echo "[debug] Linux header: " . func_header_file
 
     " Save the function name
@@ -56,11 +59,44 @@ function! taghandler#hover#FunctionHover(...)
 
     echo "[debug] Function name: " . func_name
 
+    " Get the function documentation (if any)
+
+    let func_doc_file = readfile(func_header_file)
+
+    let doc_file_end   = 0
+    let doc_file_start = 0
+    for i in range(func_file_line - 2, 0, -1)
+        if func_doc_file[i] =~ '\*/'
+            let doc_file_end = i
+        elseif func_doc_file[i] =~ '/\*'
+            let doc_file_start = i
+        elseif func_doc_file[i] =~ '^\s*$'
+            continue
+        else
+            if doc_file_end != 0 && doc_file_start != 0
+                break
+            endif
+        endif
+    endfor
+
+    echo "[debug] Start doc: " . doc_file_start
+    echo "[debug] End doc: " . doc_file_end
+
+    let func_doc = []
+    for i in range(doc_file_start, doc_file_end)
+        call add(func_doc, func_doc_file[i])
+    endfor
+
     " Showing popup
     let hover_info = []
 
     call add(hover_info, "# Function " . func_name)
     call add(hover_info, "provided by <" . func_header_file . ">")
+
+    call add(hover_info, "")
+    call add(hover_info, "---")
+    let hover_info = hover_info + func_doc
+    call add(hover_info, "---")
 
     let func_popup_id = popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1]})
 
