@@ -30,14 +30,18 @@ function! taghandler#hover#FunctionHover(...)
     		\ '[[:space:]]*([[:print:]]*)'''
 
     " User functions
-    let func_def = system('grep -G ' . func_def_regex . ' ' . expand('%'))
-    let func_def = substitute(func_def, ';', '', '')
-    let func_def = substitute(func_def, '{', '', '')
+    let func_def = system('grep -n -G ' . func_def_regex . ' ' . expand('%'))
+    if !empty(func_def)
+        let func_def = substitute(func_def, ';', '', '')
+        let func_def = substitute(func_def, '{', '', '')
+
+        let func_file_line = split(func_def, ':')[0]
+        let func_def = split(func_def, ':')[1]
+        let func_header_file = expand('%')
+    endif
     echo "[debug] User: " . func_def
 
     " Linux functions
-    let func_header_file = ""
-    let func_file_line = 0
     if empty(func_def)
         let func_def = system('grep -n -G -r ' . func_def_regex . ' ' . s:linux_include_path . ' --include=*.h ' . ' 2>/dev/null')
         if !empty(func_def)
