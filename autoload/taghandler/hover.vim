@@ -67,34 +67,53 @@ function! taghandler#hover#FunctionHover(...)
 
     let func_doc_file = readfile(func_header_file)
 
-    let doc_file_end   = 0
-    let doc_file_start = 0
+    let doc_file_end   = -1
+    let doc_file_start = -1
+
     for i in range(func_file_line - 2, 0, -1)
-        " Cases where documentation is written as: /* [function documentation] */
-        if func_doc_file[i] =~ '/\*' && func_doc_file[i] =~ '\*/'
-            let doc_file_start = i
-            let doc_file_end = i
+        " Cases where there is no documentation
+        if func_doc_file[i] =~ '^\s*$'
+            continue
+        endif
+        if func_doc_file[i] !~ '\*/'
+            " does NOT have documentation
+            break
+        else
+            " HAS documentation
+            let doc_file_end   = 0
+            let doc_file_start = 0
             break
         endif
+    endfor
 
-        " Cases where documentation is written as:
-        " /*
-        "    [function documentation]
-        " */
-        if func_doc_file[i] =~ '\*/'
-            if doc_file_end == 0
+    if doc_file_end == 0 && doc_file_start == 0
+        for i in range(func_file_line - 2, 0, -1)
+            " Cases where documentation is written as: /* [function documentation] */
+            if func_doc_file[i] =~ '/\*' && func_doc_file[i] =~ '\*/'
+                let doc_file_start = i
                 let doc_file_end = i
-            endif
-        elseif func_doc_file[i] =~ '/\*'
-            let doc_file_start = i
-        elseif func_doc_file[i] =~ '^\s*$'
-            continue
-        else
-            if doc_file_end != 0 && doc_file_start != 0
                 break
             endif
-        endif
-    endfor
+
+            " Cases where documentation is written as:
+            " /*
+            "    [function documentation]
+            " */
+            if func_doc_file[i] =~ '\*/'
+                if doc_file_end == 0
+                    let doc_file_end = i
+                endif
+            elseif func_doc_file[i] =~ '/\*'
+                let doc_file_start = i
+            elseif func_doc_file[i] =~ '^\s*$'
+                continue
+            else
+                if doc_file_end != 0 && doc_file_start != 0
+                    break
+                endif
+            endif
+        endfor
+    endif
 
     echo "[debug] Start doc: " . doc_file_start
     echo "[debug] End doc: " . doc_file_end
