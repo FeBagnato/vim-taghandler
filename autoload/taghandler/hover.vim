@@ -45,6 +45,31 @@ function! taghandler#hover#FunctionHover(...)
     if empty(func_def)
         let func_def = system('grep -n -G -r ' . func_def_regex . ' ' . s:linux_include_path . ' --include=*.h ' . ' 2>/dev/null')
         if !empty(func_def)
+            " Verify if it's a actuall definition or a comment
+            let grep_list = split(func_def, '\n')
+            let func_def = ""
+            for item in grep_list
+                echo "[debug] item: " . item
+                let item_file = readfile(split(item, ':')[0])
+                let item_line = split(item, ':')[1]
+
+                for i in range(item_line - 2, 0, -1)
+                    if item_file[i] =~ '\*/' || i == 0
+                        " Valid function
+                        let func_def = item
+                        break
+                    endif
+                    if item_file[i] =~ '/\*'
+                        " Not a valid function
+                        break
+                   endif
+                endfor
+
+                if !empty(func_def)
+                    break
+                endif
+            endfor
+
             let func_def = substitute(func_def, ';', '', '')
 
             let func_split_def_header = split(func_def, ':')
