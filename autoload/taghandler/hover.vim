@@ -34,6 +34,7 @@ function! taghandler#hover#FunctionHover(...)
     if !empty(func_def)
         let func_def = substitute(func_def, ';', '', '')
         let func_def = substitute(func_def, '{', '', '')
+        let func_def = split(func_def, '\n')[0]
 
         let func_file_line = split(func_def, ':')[0]
         let func_def = split(func_def, ':')[1]
@@ -158,6 +159,9 @@ function! taghandler#hover#FunctionHover(...)
     call add(hover_info, "---")
     let hover_info = hover_info + func_doc
     call add(hover_info, "---")
+
+    call add(hover_info, "")
+    call add(hover_info, func_def)
 
     let func_popup_id = popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1], moved: 'any'})
 
