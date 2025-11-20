@@ -7,105 +7,71 @@ let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*' .
 		\ '[[:space:]]*([[:print:]]*)'''
 
 " ===========================================================================
-" Name: FunctionHover
-" Description: This function will show a function declaration and it's
-" documentation (if available).
-" Return: None
+" Description: Regex auxiliary functions
 " ===========================================================================
-let s:linux_include_path = "/usr/include/"
-function! taghandler#hover#FunctionHover(...)
-	if v:version <	900
-		echo "You need to use vim 9.0 or newer"
-		return
-	endif
+let s:func_def = ""
+let s:func_name = ""
+let s:func_header_file = ""
+let s:func_def_list = []
+let s:func_doc = []
+function! s:GetFunctionInfo(func_def_arg)
+    " Verify if it's a actuall definition or a comment
+    let grep_list = split(a:func_def_arg, '\n')
+    let s:func_def = ""
+    for item in grep_list
+        echo "[debug] item: " . item
+        let item_file = readfile(split(item, ':')[0])
+        let item_line = split(item, ':')[1]
 
-    let cursorSymbol = expand('<cword>')
-    if empty(cursorSymbol)
-        return
-    endif
-
-    let func_def_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*' .
-    		\ '\([[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*\)*' .
-    		\ '[*[:space:]]\+' . cursorSymbol .
-    		\ '[[:space:]]*([[:print:]]*'''
-
-    " User functions
-    let func_def = system('grep -n -G ' . func_def_regex . ' ' . expand('%'))
-    if !empty(func_def)
-        let func_def = substitute(func_def, ';', '', '')
-        let func_def = substitute(func_def, '{', '', '')
-        let func_def = split(func_def, '\n')[0]
-
-        let func_file_line = split(func_def, ':')[0]
-        let func_def = split(func_def, ':')[1]
-        let func_header_file = expand('%')
-    endif
-    echo "[debug] User: " . func_def
-
-    " Linux functions
-    let func_def_list = []
-    if empty(func_def)
-        let func_def = system('grep -n -G -r ' . func_def_regex . ' ' . s:linux_include_path . ' --include=*.h ' . ' 2>/dev/null')
-        if !empty(func_def)
-            " Verify if it's a actuall definition or a comment
-            let grep_list = split(func_def, '\n')
-            let func_def = ""
-            for item in grep_list
-                echo "[debug] item: " . item
-                let item_file = readfile(split(item, ':')[0])
-                let item_line = split(item, ':')[1]
-
-                for i in range(item_line - 2, 0, -1)
-                    if item_file[i] =~ '\*/' || i == 0
-                        " Valid function
-                        let func_def = item
-                        break
-                    endif
-                    if item_file[i] =~ '/\*'
-                        " Not a valid function
-                        break
-                   endif
-                endfor
-
-                if !empty(func_def)
-                    break
-                endif
-            endfor
-
-            let func_def = substitute(func_def, ';', '', '')
-
-            let func_split_def_header = split(func_def, ':')
-            let func_file_line = func_split_def_header[1]
-            let func_header_file = func_split_def_header[0]
-            let func_def = func_split_def_header[2]
-
-            " Cases where function declaration is splited into multiple lines
-            if func_def !~ ')$'
-                let func_def_file = readfile(func_header_file)
-                for i in range(func_file_line -1, len(func_def_file) - 1)
-                    if func_def_file[i] =~ ';$'
-                        call add(func_def_list, func_def_file[i])
-                        break
-                    else
-                        call add(func_def_list, func_def_file[i])
-                    endif
-                endfor
+        for i in range(item_line - 2, 0, -1)
+            if item_file[i] =~ '\*/' || i == 0
+                " Valid function
+                let s:func_def = item
+                break
             endif
+            if item_file[i] =~ '/\*'
+                " Not a valid function
+                break
+           endif
+        endfor
 
+        if !empty(s:func_def)
+            break
         endif
+    endfor
+
+    let s:func_def = substitute(s:func_def, ';', '', '')
+
+    let func_split_def_header = split(s:func_def, ':')
+    let func_file_line = func_split_def_header[1]
+    let s:func_header_file = func_split_def_header[0]
+    let s:func_def = func_split_def_header[2]
+
+    " Cases where function declaration is splited into multiple lines
+    if s:func_def !~ ')$'
+        let func_def_file = readfile(s:func_header_file)
+        for i in range(func_file_line -1, len(func_def_file) - 1)
+            if func_def_file[i] =~ ';$'
+                call add(s:func_def_list, func_def_file[i])
+                break
+            else
+                call add(s:func_def_list, func_def_file[i])
+            endif
+        endfor
     endif
-    echo "[debug] Linux def: " . func_def
+
+    echo "[debug] Linux def: " . s:func_def
     echo "[debug] Linux def num: " . func_file_line
 
     " Save the function name
-    let func_name = system('echo -n \"' . shellescape(func_def) . '\" | grep -o -G [a-zA-Z0-9_]*[[:space:]]*\(')
-    let func_name = split(func_name, '(')[0]
+    let s:func_name = system('echo -n \"' . shellescape(s:func_def) . '\" | grep -o -G [a-zA-Z0-9_]*[[:space:]]*\(')
+    let s:func_name = split(s:func_name, '(')[0]
 
-    echo "[debug] Function name: " . func_name
+    echo "[debug] Function name: " . s:func_name
 
     " Get the function documentation (if any)
 
-    let func_doc_file = readfile(func_header_file)
+    let func_doc_file = readfile(s:func_header_file)
 
     let doc_file_end   = -1
     let doc_file_start = -1
@@ -158,38 +124,85 @@ function! taghandler#hover#FunctionHover(...)
     echo "[debug] Start doc: " . doc_file_start
     echo "[debug] End doc: " . doc_file_end
 
-    let func_doc = []
     for i in range(doc_file_start, doc_file_end)
-        call add(func_doc, func_doc_file[i])
+        call add(s:func_doc, func_doc_file[i])
     endfor
 
     " Format header name
-    if func_header_file !~ '.h$'
-        let func_header_file = ''
+    if s:func_header_file !~ '.h$'
+        let s:func_header_file = ''
     else
-        let func_split_def_header = split(func_header_file, '/')
-        let func_header_file = func_split_def_header[len(func_split_def_header) - 1]
+        let func_split_def_header = split(s:func_header_file, '/')
+        let s:func_header_file = func_split_def_header[len(func_split_def_header) - 1]
     endif
-    echo "[debug] Linux header: " . func_header_file
+    echo "[debug] Linux header: " . s:func_header_file
+
+endfunction
+
+" ===========================================================================
+" Name: FunctionHover
+" Description: This function will show a function declaration and it's
+" documentation (if available).
+" Return: None
+" ===========================================================================
+let s:linux_include_path = "/usr/include/"
+function! taghandler#hover#FunctionHover(...)
+	if v:version <	900
+		echo "You need to use vim 9.0 or newer"
+		return
+	endif
+
+    let cursorSymbol = expand('<cword>')
+    if empty(cursorSymbol)
+        return
+    endif
+
+    let s:func_name = ""
+    let s:func_def_list = []
+    let s:func_doc = []
+    let s:func_header_file = ""
+    let func_def_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*' .
+    		\ '\([[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*\)*' .
+    		\ '[*[:space:]]\+' . cursorSymbol .
+    		\ '[[:space:]]*([[:print:]]*'''
+
+    " User functions
+    let s:func_def = system('grep -n -G -r ' . func_def_regex . ' . 2>/dev/null')
+    if !empty(s:func_def)
+        let s:func_def = substitute(s:func_def, ';', '', '')
+        let s:func_def = substitute(s:func_def, '{', '', '')
+        let s:func_def = split(s:func_def, '\n')[0]
+
+        call s:GetFunctionInfo(s:func_def)
+    endif
+    echo "[debug] User: " . s:func_def
+
+    " Linux functions
+    if empty(s:func_def)
+        let s:func_def = system('grep -n -G -r ' . func_def_regex . ' ' . s:linux_include_path . ' --include=*.h ' . ' 2>/dev/null')
+        if !empty(s:func_def)
+            call s:GetFunctionInfo(s:func_def)
+        endif
+    endif
 
     " Showing popup
     let hover_info = []
 
-    call add(hover_info, "# Function " . func_name)
-    if !empty(func_header_file)
-        call add(hover_info, "provided by <" . func_header_file . ">")
+    call add(hover_info, "# Function " . s:func_name)
+    if !empty(s:func_header_file)
+        call add(hover_info, "provided by <" . s:func_header_file . ">")
     endif
 
     call add(hover_info, "")
     call add(hover_info, "---")
-    let hover_info = hover_info + func_doc
+    let hover_info = hover_info + s:func_doc
     call add(hover_info, "---")
 
     call add(hover_info, "")
-    if !empty(func_def_list)
-        let hover_info = hover_info + func_def_list
+    if !empty(s:func_def_list)
+        let hover_info = hover_info + s:func_def_list
     else
-        call add(hover_info, func_def)
+        call add(hover_info, s:func_def)
     endif
 
     let func_popup_id = popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1], moved: 'any'})
