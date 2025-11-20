@@ -96,7 +96,6 @@ function! taghandler#hover#FunctionHover(...)
     endif
     echo "[debug] Linux def: " . func_def
     echo "[debug] Linux def num: " . func_file_line
-    echo "[debug] Linux header: " . func_header_file
 
     " Save the function name
     let func_name = system('echo -n \"' . shellescape(func_def) . '\" | grep -o -G [a-zA-Z0-9_]*[[:space:]]*\(')
@@ -164,11 +163,22 @@ function! taghandler#hover#FunctionHover(...)
         call add(func_doc, func_doc_file[i])
     endfor
 
+    " Format header name
+    if func_header_file !~ '.h$'
+        let func_header_file = ''
+    else
+        let func_split_def_header = split(func_header_file, '/')
+        let func_header_file = func_split_def_header[len(func_split_def_header) - 1]
+    endif
+    echo "[debug] Linux header: " . func_header_file
+
     " Showing popup
     let hover_info = []
 
     call add(hover_info, "# Function " . func_name)
-    call add(hover_info, "provided by <" . func_header_file . ">")
+    if !empty(func_header_file)
+        call add(hover_info, "provided by <" . func_header_file . ">")
+    endif
 
     call add(hover_info, "")
     call add(hover_info, "---")
