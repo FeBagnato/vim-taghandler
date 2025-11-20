@@ -27,7 +27,7 @@ function! taghandler#hover#FunctionHover(...)
     let func_def_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*' .
     		\ '\([[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*\)*' .
     		\ '[*[:space:]]\+' . cursorSymbol .
-    		\ '[[:space:]]*([[:print:]]*)'''
+    		\ '[[:space:]]*([[:print:]]*'''
 
     " User functions
     let func_def = system('grep -n -G ' . func_def_regex . ' ' . expand('%'))
@@ -43,6 +43,7 @@ function! taghandler#hover#FunctionHover(...)
     echo "[debug] User: " . func_def
 
     " Linux functions
+    let func_def_list = []
     if empty(func_def)
         let func_def = system('grep -n -G -r ' . func_def_regex . ' ' . s:linux_include_path . ' --include=*.h ' . ' 2>/dev/null')
         if !empty(func_def)
@@ -77,6 +78,20 @@ function! taghandler#hover#FunctionHover(...)
             let func_file_line = func_split_def_header[1]
             let func_header_file = func_split_def_header[0]
             let func_def = func_split_def_header[2]
+
+            " Cases where function declaration is splited into multiple lines
+            if func_def !~ ')$'
+                let func_def_file = readfile(func_header_file)
+                for i in range(func_file_line -1, len(func_def_file) - 1)
+                    if func_def_file[i] =~ ';$'
+                        call add(func_def_list, func_def_file[i])
+                        break
+                    else
+                        call add(func_def_list, func_def_file[i])
+                    endif
+                endfor
+            endif
+
         endif
     endif
     echo "[debug] Linux def: " . func_def
@@ -161,7 +176,11 @@ function! taghandler#hover#FunctionHover(...)
     call add(hover_info, "---")
 
     call add(hover_info, "")
-    call add(hover_info, func_def)
+    if !empty(func_def_list)
+        let hover_info = hover_info + func_def_list
+    else
+        call add(hover_info, func_def)
+    endif
 
     let func_popup_id = popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1], moved: 'any'})
 
