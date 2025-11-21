@@ -6,6 +6,9 @@ let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*' .
 		\ '[*[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*' .
 		\ '[[:space:]]*([[:print:]]*)'''
 
+call prop_type_add('separator', {'highlight': 'Operator'})
+call prop_type_add('title', {'highlight': 'Title'})
+call prop_type_add('type', {'highlight': 'Type'})
 " ===========================================================================
 " Description: Regex auxiliary functions
 " ===========================================================================
@@ -187,22 +190,36 @@ function! taghandler#hover#FunctionHover(...)
 
     " Showing popup
     let hover_info = []
+    let hover_separator = {'text': "---", 'props': [{'col': 1,'length': 3,'type': 'separator'}]}
 
-    call add(hover_info, "# Function " . s:func_name)
+    let hover_title = {'text': "# Function " . s:func_name, 'props': [{'col': 1,'length': 11,'type': 'title'}]}
+    call add(hover_info, hover_title)
     if !empty(s:func_header_file)
-        call add(hover_info, "provided by <" . s:func_header_file . ">")
+        call add(hover_info, {'text': "provided by <" . s:func_header_file . ">"})
     endif
 
-    call add(hover_info, "")
-    call add(hover_info, "---")
-    let hover_info = hover_info + s:func_doc
-    call add(hover_info, "---")
+    call add(hover_info, {'text': ""})
+    call add(hover_info, hover_separator)
 
-    call add(hover_info, "")
+    for line in s:func_doc
+        call add(hover_info, {'text': line})
+    endfor
+
+    call add(hover_info, hover_separator)
+
+    call add(hover_info, {'text': ""})
     if !empty(s:func_def_list)
-        let hover_info = hover_info + s:func_def_list
+        let func_type_len = len(split(s:func_def_list[0], s:func_name)[0])
+        let hover_func_def = {'text': s:func_def_list[0], 'props': [{'col': 1,'length': func_type_len,'type': 'type'}]}
+
+        call add(hover_info, hover_func_def)
+        for i in range(1, len(s:func_def_list) - 1)
+            call add(hover_info, {'text': s:func_def_list[i]})
+        endfor
     else
-        call add(hover_info, s:func_def)
+        let func_type_len = len(split(s:func_def, s:func_name)[0])
+        let hover_func_def = {'text': s:func_def, 'props': [{'col': 1,'length': func_type_len,'type': 'type'}]}
+        call add(hover_info, hover_func_def)
     endif
 
     let func_popup_id = popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1], moved: 'any'})
