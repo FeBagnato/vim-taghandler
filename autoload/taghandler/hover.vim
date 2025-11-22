@@ -98,7 +98,7 @@ function! s:GetFunctionInfo(func_def_arg)
     if doc_file_end == 0 && doc_file_start == 0
         for i in range(func_file_line - 2, 0, -1)
             " Cases where documentation is written as: /* [function documentation] */
-            if func_doc_file[i] =~ '/\*' && func_doc_file[i] =~ '\*/'
+            if func_doc_file[i] =~ '^/\*' && func_doc_file[i] =~ '\*/'
                 let doc_file_start = i
                 let doc_file_end = i
                 break
@@ -112,7 +112,7 @@ function! s:GetFunctionInfo(func_def_arg)
                 if doc_file_end == 0
                     let doc_file_end = i
                 endif
-            elseif func_doc_file[i] =~ '/\*'
+            elseif func_doc_file[i] =~ '^/\*'
                 let doc_file_start = i
             elseif func_doc_file[i] =~ '^\s*$'
                 continue
