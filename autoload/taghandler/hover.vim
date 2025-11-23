@@ -128,7 +128,11 @@ function! s:GetFunctionInfo(func_def_arg)
     echo "[debug] End doc: " . doc_file_end
 
     for i in range(doc_file_start, doc_file_end)
-        call add(s:func_doc, func_doc_file[i])
+        let func_doc_fmt = substitute(func_doc_file[i], "/\\*", "", 'g')
+        let func_doc_fmt = substitute(func_doc_fmt, "^\\s*", "", '')
+        let func_doc_fmt = substitute(func_doc_fmt, "\*/", "", 'g')
+
+        call add(s:func_doc, func_doc_fmt)
     endfor
 
     " Format header name
