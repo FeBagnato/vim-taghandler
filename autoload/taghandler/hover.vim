@@ -127,13 +127,17 @@ function! s:GetFunctionInfo(func_def_arg)
     echo "[debug] Start doc: " . doc_file_start
     echo "[debug] End doc: " . doc_file_end
 
-    for i in range(doc_file_start, doc_file_end)
-        let func_doc_fmt = substitute(func_doc_file[i], "/\\*", "", 'g')
-        let func_doc_fmt = substitute(func_doc_fmt, "^\\s*", "", '')
-        let func_doc_fmt = substitute(func_doc_fmt, "\*/", "", 'g')
+    if doc_file_start >= 0 && doc_file_end >= 0
+        for i in range(doc_file_start, doc_file_end)
+            let func_doc_fmt = substitute(func_doc_file[i], "/\\*", "", 'g')
+            let func_doc_fmt = substitute(func_doc_fmt, "^\\s*", "", '')
+            let func_doc_fmt = substitute(func_doc_fmt, "\*/", "", 'g')
 
-        call add(s:func_doc, func_doc_fmt)
-    endfor
+            call add(s:func_doc, func_doc_fmt)
+        endfor
+    else
+        let s:func_doc = []
+    endif
 
     " Format header name
     if s:func_header_file !~ '.h$'
@@ -205,11 +209,13 @@ function! taghandler#hover#FunctionHover(...)
     call add(hover_info, {'text': ""})
     call add(hover_info, hover_separator)
 
-    for line in s:func_doc
-        call add(hover_info, {'text': line})
-    endfor
+    if !empty(s:func_doc)
+        for line in s:func_doc
+            call add(hover_info, {'text': line})
+        endfor
 
-    call add(hover_info, hover_separator)
+        call add(hover_info, hover_separator)
+    endif
 
     call add(hover_info, {'text': ""})
     if !empty(s:func_def_list)
