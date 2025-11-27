@@ -157,6 +157,7 @@ endfunction
 " Return: None
 " ===========================================================================
 let s:linux_include_path = "/usr/include/"
+let g:custom_include_path = []
 function! taghandler#hover#FunctionHover(...)
 	if v:version <	900
 		echo "You need to use vim 9.0 or newer"
@@ -187,6 +188,19 @@ function! taghandler#hover#FunctionHover(...)
         call s:GetFunctionInfo(s:func_def)
     endif
     echo "[debug] User: " . s:func_def
+
+    " Custom functions
+    if empty(s:func_def)
+        for custom_path in g:custom_include_path
+            let s:func_def = system('grep -n -G -r ' . func_def_regex . ' ' . custom_path . ' --include=*.h ' . ' 2>/dev/null')
+            if !empty(s:func_def)
+                call s:GetFunctionInfo(s:func_def)
+                if !empty(s:func_name)
+                    break
+                endif
+            endif
+        endfor
+    endif
 
     " Linux functions
     if empty(s:func_def)
