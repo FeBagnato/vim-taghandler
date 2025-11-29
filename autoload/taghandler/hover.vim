@@ -157,7 +157,9 @@ endfunction
 " Return: None
 " ===========================================================================
 let s:linux_include_path = "/usr/include/"
-let g:custom_include_path = []
+if !exists(g:custom_include_path)
+    let g:custom_include_path = []
+endif
 function! taghandler#hover#FunctionHover(...)
 	if v:version <	900
 		echo "You need to use vim 9.0 or newer"
