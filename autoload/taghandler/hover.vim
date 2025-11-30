@@ -43,6 +43,10 @@ function! s:GetFunctionInfo(func_def_arg)
         endif
     endfor
 
+    if empty(s:func_def)
+        return
+    endif
+
     let s:func_def = substitute(s:func_def, ';', '', '')
 
     let func_split_def_header = split(s:func_def, ':')
