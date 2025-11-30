@@ -157,7 +157,7 @@ endfunction
 " Return: None
 " ===========================================================================
 let s:linux_include_path = "/usr/include/"
-if !exists(g:custom_include_path)
+if !exists("g:custom_include_path")
     let g:custom_include_path = []
 endif
 function! taghandler#hover#FunctionHover(...)
