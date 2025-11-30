@@ -213,6 +213,11 @@ function! taghandler#hover#FunctionHover(...)
     endif
 
     " Showing popup
+    if empty(s:func_name)
+        echo "Function not found!"
+        return
+    endif
+
     let hover_info = []
     let hover_separator = {'text': "---", 'props': [{'col': 1,'length': 3,'type': 'separator'}]}
 
