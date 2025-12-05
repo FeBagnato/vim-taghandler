@@ -225,8 +225,7 @@ function! taghandler#hover#FunctionHover(...)
     let hover_info = []
     let hover_separator = {'text': "---", 'props': [{'col': 1,'length': 3,'type': 'separator'}]}
 
-    let hover_title = {'text': "# Function " . s:func_name, 'props': [{'col': 1,'length': 11,'type': 'title'}]}
-    call add(hover_info, hover_title)
+    call add(hover_info, {'text': "# Function " . s:func_name, 'props': [{'col': 1,'length': 11,'type': 'title'}]})
     if !empty(s:func_header_file)
         call add(hover_info, {'text': "provided by <" . s:func_header_file . ">"})
     endif
@@ -244,7 +243,7 @@ function! taghandler#hover#FunctionHover(...)
 
     call add(hover_info, {'text': ""})
     if !empty(s:func_def_list)
-        let func_type_len = len(split(s:func_def_list[0], s:func_name)[0])
+        let func_type_len = stridx(s:func_def_list[0], s:func_name)
         let hover_func_def = {'text': s:func_def_list[0], 'props': [{'col': 1,'length': func_type_len,'type': 'type'}]}
 
         call add(hover_info, hover_func_def)
@@ -252,11 +251,11 @@ function! taghandler#hover#FunctionHover(...)
             call add(hover_info, {'text': s:func_def_list[i]})
         endfor
     else
-        let func_type_len = len(split(s:func_def, s:func_name)[0])
+        let func_type_len = stridx(s:func_def, s:func_name)
         let hover_func_def = {'text': s:func_def, 'props': [{'col': 1,'length': func_type_len,'type': 'type'}]}
         call add(hover_info, hover_func_def)
     endif
 
-    let func_popup_id = popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1], moved: 'any'})
+    call popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1], moved: 'any'})
 
 endfunction
