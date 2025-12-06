@@ -9,6 +9,7 @@ let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*' .
 call prop_type_add('separator', {'highlight': 'Operator'})
 call prop_type_add('title', {'highlight': 'Title'})
 call prop_type_add('type', {'highlight': 'Type'})
+
 " ===========================================================================
 " Description: Regex auxiliary functions
 " ===========================================================================
@@ -218,7 +219,9 @@ function! taghandler#hover#FunctionHover(...)
 
     " Showing popup
     if empty(s:func_name)
-        echo "Function not found!"
+        echohl ErrorMsg
+        echomsg "Function not found!"
+        echohl None
         return
     endif
 
