@@ -48,18 +48,18 @@ function! s:GetFunctionInfo(func_def_arg)
         return
     endif
 
-    let s:func_def = substitute(s:func_def, ';', '', '')
-
     let func_split_def_header = split(s:func_def, ':')
     let func_file_line = func_split_def_header[1]
     let s:func_header_file = func_split_def_header[0]
     let s:func_def = func_split_def_header[2]
 
     " Cases where function declaration is splited into multiple lines
-    if s:func_def !~ ')$'
+    if s:func_def !~ ')'
         let func_def_file = readfile(s:func_header_file)
-        for i in range(func_file_line -1, len(func_def_file) - 1)
-            if func_def_file[i] =~ ';$'
+        let func_def_file_lines = len(func_def_file) - 1
+
+        for i in range(func_file_line - 1, func_def_file_lines)
+            if func_def_file[i] =~ ')'
                 call add(s:func_def_list, func_def_file[i])
                 break
             else
@@ -68,12 +68,13 @@ function! s:GetFunctionInfo(func_def_arg)
         endfor
     endif
 
-    echo "[debug] Linux def: " . s:func_def
-    echo "[debug] Linux def num: " . func_file_line
+    echo "[debug] Linux def: " . func_file_line . ": " . s:func_def
 
     " Save the function name
-    let s:func_name = system('echo -n \"' . shellescape(s:func_def) . '\" | grep -o -G [a-zA-Z0-9_]*[[:space:]]*\(')
-    let s:func_name = split(s:func_name, '(')[0]
+    let s:func_name = matchstr(s:func_def, '[a-zA-Z0-9_]*\s*(')
+    if s:func_name[-1:] == '('
+        let s:func_name = s:func_name[:-2]
+    endif
 
     echo "[debug] Function name: " . s:func_name
 
@@ -134,9 +135,8 @@ function! s:GetFunctionInfo(func_def_arg)
 
     if doc_file_start >= 0 && doc_file_end >= 0
         for i in range(doc_file_start, doc_file_end)
-            let func_doc_fmt = substitute(func_doc_file[i], "/\\*", "", 'g')
+            let func_doc_fmt = substitute(func_doc_file[i], "\\/\\*\\|\\*\\/", "", 'g')
             let func_doc_fmt = substitute(func_doc_fmt, "^\\s*", "", '')
-            let func_doc_fmt = substitute(func_doc_fmt, "\*/", "", 'g')
 
             call add(s:func_doc, func_doc_fmt)
         endfor
@@ -148,8 +148,8 @@ function! s:GetFunctionInfo(func_def_arg)
     if s:func_header_file !~ '.h$'
         let s:func_header_file = ''
     else
-        let func_split_def_header = split(s:func_header_file, '/')
-        let s:func_header_file = func_split_def_header[len(func_split_def_header) - 1]
+        let idx_header_file = strridx(s:func_header_file, '/') + 1
+        let s:func_header_file = s:func_header_file[idx_header_file : -1]
     endif
     echo "[debug] Linux header: " . s:func_header_file
 
