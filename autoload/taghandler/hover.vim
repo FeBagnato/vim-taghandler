@@ -23,7 +23,6 @@ function! s:GetFunctionInfo(func_def_arg)
     let grep_list = split(a:func_def_arg, '\n')
     let s:func_def = ""
     for item in grep_list
-        echo "[debug] item: " . item
         let item_file = readfile(split(item, ':')[0])
         let item_line = split(item, ':')[1]
 
@@ -68,15 +67,11 @@ function! s:GetFunctionInfo(func_def_arg)
         endfor
     endif
 
-    echo "[debug] Linux def: " . func_file_line . ": " . s:func_def
-
     " Save the function name
     let s:func_name = matchstr(s:func_def, '[a-zA-Z0-9_]*\s*(')
     if s:func_name[-1:] == '('
         let s:func_name = s:func_name[:-2]
     endif
-
-    echo "[debug] Function name: " . s:func_name
 
     " Get the function documentation (if any)
 
@@ -130,9 +125,6 @@ function! s:GetFunctionInfo(func_def_arg)
         endfor
     endif
 
-    echo "[debug] Start doc: " . doc_file_start
-    echo "[debug] End doc: " . doc_file_end
-
     if doc_file_start >= 0 && doc_file_end >= 0
         for i in range(doc_file_start, doc_file_end)
             let func_doc_fmt = substitute(func_doc_file[i], "\\/\\*\\|\\*\\/", "", 'g')
@@ -151,7 +143,6 @@ function! s:GetFunctionInfo(func_def_arg)
         let idx_header_file = strridx(s:func_header_file, '/') + 1
         let s:func_header_file = s:func_header_file[idx_header_file : -1]
     endif
-    echo "[debug] Linux header: " . s:func_header_file
 
 endfunction
 
@@ -167,7 +158,6 @@ if !exists("g:custom_include_path")
 endif
 function! taghandler#hover#FunctionHover(...)
 	if v:version <	900
-		echo "You need to use vim 9.0 or newer"
 		return
 	endif
 
@@ -194,7 +184,6 @@ function! taghandler#hover#FunctionHover(...)
 
         call s:GetFunctionInfo(s:func_def)
     endif
-    echo "[debug] User: " . s:func_def
 
     " Custom functions
     if empty(s:func_def)
