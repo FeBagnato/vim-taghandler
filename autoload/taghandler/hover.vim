@@ -1,0 +1,253 @@
+" ===========================================================================
+" Description: Regex auxiliary variables
+" ===========================================================================
+let function_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*' .
+		\ '\([[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*\)*' .
+		\ '[*[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*' .
+		\ '[[:space:]]*([[:print:]]*)'''
+
+call prop_type_add('separator', {'highlight': 'Operator'})
+call prop_type_add('title', {'highlight': 'Title'})
+call prop_type_add('type', {'highlight': 'Type'})
+
+" ===========================================================================
+" Description: Regex auxiliary functions
+" ===========================================================================
+let s:func_def = ""
+let s:func_name = ""
+let s:func_header_file = ""
+let s:func_def_list = []
+let s:func_doc = []
+function! s:GetFunctionInfo(func_def_arg)
+    " Verify if it's a actuall definition or a comment
+    let grep_list = split(a:func_def_arg, '\n')
+    let s:func_def = ""
+    for item in grep_list
+        let item_file = readfile(split(item, ':')[0])
+        let item_line = split(item, ':')[1]
+
+        for i in range(item_line - 2, 0, -1)
+            if item_file[i] =~ '\*/' || i == 0
+                " Valid function
+                let s:func_def = item
+                break
+            endif
+            if item_file[i] =~ '/\*'
+                " Not a valid function
+                break
+           endif
+        endfor
+
+        if !empty(s:func_def)
+            break
+        endif
+    endfor
+
+    if empty(s:func_def)
+        return
+    endif
+
+    let func_split_def_header = split(s:func_def, ':')
+    let func_file_line = func_split_def_header[1]
+    let s:func_header_file = func_split_def_header[0]
+    let s:func_def = func_split_def_header[2]
+
+    " Cases where function declaration is splited into multiple lines
+    if s:func_def !~ ')'
+        let func_def_file = readfile(s:func_header_file)
+        let func_def_file_lines = len(func_def_file) - 1
+
+        for i in range(func_file_line - 1, func_def_file_lines)
+            if func_def_file[i] =~ ')'
+                call add(s:func_def_list, func_def_file[i])
+                break
+            else
+                call add(s:func_def_list, func_def_file[i])
+            endif
+        endfor
+    endif
+
+    " Save the function name
+    let s:func_name = matchstr(s:func_def, '[a-zA-Z0-9_]*\s*(')
+    if s:func_name[-1:] == '('
+        let s:func_name = s:func_name[:-2]
+    endif
+
+    " Get the function documentation (if any)
+
+    let func_doc_file = readfile(s:func_header_file)
+
+    let doc_file_end   = -1
+    let doc_file_start = -1
+
+    for i in range(func_file_line - 2, 0, -1)
+        " Cases where there is no documentation
+        if func_doc_file[i] =~ '^\s*$'
+            continue
+        endif
+        if func_doc_file[i] !~ '\*/'
+            " does NOT have documentation
+            break
+        else
+            " HAS documentation
+            let doc_file_end   = 0
+            let doc_file_start = 0
+            break
+        endif
+    endfor
+
+    if doc_file_end == 0 && doc_file_start == 0
+        for i in range(func_file_line - 2, 0, -1)
+            " Cases where documentation is written as: /* [function documentation] */
+            if func_doc_file[i] =~ '^/\*' && func_doc_file[i] =~ '\*/'
+                let doc_file_start = i
+                let doc_file_end = i
+                break
+            endif
+
+            " Cases where documentation is written as:
+            " /*
+            "    [function documentation]
+            " */
+            if func_doc_file[i] =~ '\*/'
+                if doc_file_end == 0
+                    let doc_file_end = i
+                endif
+            elseif func_doc_file[i] =~ '^/\*'
+                let doc_file_start = i
+            elseif func_doc_file[i] =~ '^\s*$'
+                continue
+            else
+                if doc_file_end != 0 && doc_file_start != 0
+                    break
+                endif
+            endif
+        endfor
+    endif
+
+    if doc_file_start >= 0 && doc_file_end >= 0
+        for i in range(doc_file_start, doc_file_end)
+            let func_doc_fmt = substitute(func_doc_file[i], "\\/\\*\\|\\*\\/", "", 'g')
+            let func_doc_fmt = substitute(func_doc_fmt, "^\\s*", "", '')
+
+            call add(s:func_doc, func_doc_fmt)
+        endfor
+    else
+        let s:func_doc = []
+    endif
+
+    " Format header name
+    if s:func_header_file !~ '.h$'
+        let s:func_header_file = ''
+    else
+        let idx_header_file = strridx(s:func_header_file, '/') + 1
+        let s:func_header_file = s:func_header_file[idx_header_file : -1]
+    endif
+
+endfunction
+
+" ===========================================================================
+" Name: FunctionHover
+" Description: This function will show a function declaration and it's
+" documentation (if available).
+" Return: None
+" ===========================================================================
+let s:linux_include_path = "/usr/include/"
+if !exists("g:custom_include_path")
+    let g:custom_include_path = []
+endif
+function! taghandler#hover#FunctionHover(...)
+	if v:version <	900
+		return
+	endif
+
+    let cursorSymbol = expand('<cword>')
+    if empty(cursorSymbol)
+        return
+    endif
+
+    let s:func_name = ""
+    let s:func_def_list = []
+    let s:func_doc = []
+    let s:func_header_file = ""
+    let func_def_regex = '''^[a-zA-Z_][a-zA-Z0-9_]*' .
+    		\ '\([[:space:]]\+[a-zA-Z_][a-zA-Z0-9_]*\)*' .
+    		\ '[*[:space:]]\+' . cursorSymbol .
+    		\ '[[:space:]]*([[:print:]]*'''
+
+    " User functions
+    let s:func_def = system('grep -n -G -r ' . func_def_regex . ' . 2>/dev/null')
+    if !empty(s:func_def)
+        let s:func_def = substitute(s:func_def, ';', '', '')
+        let s:func_def = substitute(s:func_def, '{', '', '')
+        let s:func_def = split(s:func_def, '\n')[0]
+
+        call s:GetFunctionInfo(s:func_def)
+    endif
+
+    " Custom functions
+    if empty(s:func_def)
+        for custom_path in g:custom_include_path
+            let s:func_def = system('grep -n -G -r ' . func_def_regex . ' ' . custom_path . ' --include=*.h ' . ' 2>/dev/null')
+            if !empty(s:func_def)
+                call s:GetFunctionInfo(s:func_def)
+                if !empty(s:func_name)
+                    break
+                endif
+            endif
+        endfor
+    endif
+
+    " Linux functions
+    if empty(s:func_def)
+        let s:func_def = system('grep -n -G -r ' . func_def_regex . ' ' . s:linux_include_path . ' --include=*.h ' . ' 2>/dev/null')
+        if !empty(s:func_def)
+            call s:GetFunctionInfo(s:func_def)
+        endif
+    endif
+
+    " Showing popup
+    if empty(s:func_name)
+        echohl ErrorMsg
+        echomsg "Function not found!"
+        echohl None
+        return
+    endif
+
+    let hover_info = []
+    let hover_separator = {'text': "---", 'props': [{'col': 1,'length': 3,'type': 'separator'}]}
+
+    call add(hover_info, {'text': "# Function " . s:func_name, 'props': [{'col': 1,'length': 11,'type': 'title'}]})
+    if !empty(s:func_header_file)
+        call add(hover_info, {'text': "provided by <" . s:func_header_file . ">"})
+    endif
+
+    call add(hover_info, {'text': ""})
+    call add(hover_info, hover_separator)
+
+    if !empty(s:func_doc)
+        for line in s:func_doc
+            call add(hover_info, {'text': line})
+        endfor
+
+        call add(hover_info, hover_separator)
+    endif
+
+    call add(hover_info, {'text': ""})
+    if !empty(s:func_def_list)
+        let func_type_len = stridx(s:func_def_list[0], s:func_name)
+        let hover_func_def = {'text': s:func_def_list[0], 'props': [{'col': 1,'length': func_type_len,'type': 'type'}]}
+
+        call add(hover_info, hover_func_def)
+        for i in range(1, len(s:func_def_list) - 1)
+            call add(hover_info, {'text': s:func_def_list[i]})
+        endfor
+    else
+        let func_type_len = stridx(s:func_def, s:func_name)
+        let hover_func_def = {'text': s:func_def, 'props': [{'col': 1,'length': func_type_len,'type': 'type'}]}
+        call add(hover_info, hover_func_def)
+    endif
+
+    call popup_create(hover_info, #{padding: [1,1,1,1], border: [1,1,1,1], moved: 'any'})
+
+endfunction

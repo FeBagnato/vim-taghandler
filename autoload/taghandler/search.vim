@@ -16,7 +16,7 @@ endfunction
 "              It will show a list with the result.
 " Return: None
 " ===========================================================================
-function! taghandler#ListFunctions(...)
+function! taghandler#search#ListFunctions(...)
 	if v:version < 900
 		echo "You need to use vim 9.0 or newer"
 		return
@@ -64,7 +64,6 @@ function! taghandler#ListFunctions(...)
 	endif
 endfunction
 
-
 " Callback function used by Find
 function! s:FindCallback(id, result)
 	if a:result < 0
@@ -102,7 +101,7 @@ endfunction
 " =====================================================================================
 let g:ExclusionList = []
 let g:InclusionList = []
-function! taghandler#Find()
+function! taghandler#search#Find()
 	if v:version <	900
 		echo "You need to use vim 9.0 or newer"
 		return
@@ -149,7 +148,7 @@ endfunction
 " Return: None
 " ======================================================================================
 let s:stack_find_backwards = []
-function! taghandler#FindJumpBackwards()
+function! taghandler#search#FindJumpBackwards()
 	if v:version < 900
 		echo "You need to use vim 9.0 or newer"
 		return
@@ -194,7 +193,7 @@ endfunction
 
 " GetCurrentFunction entry point
 let s:first_run = 1
-function! taghandler#ReturnCurrentFunction()
+function! taghandler#search#ReturnCurrentFunction()
 		if s:first_run
 			call timer_start(0, 's:GetCurrentFunction', {'repeat': -1})
 			let s:first_run = 0
